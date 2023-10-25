@@ -11,11 +11,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Execute a Doctrine MongoDB ODM query and output the results.
+ *
+ * @internal since 4.7
  */
 class QueryDoctrineODMCommand extends QueryCommand
 {
-    /** @return void */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -24,8 +25,7 @@ class QueryDoctrineODMCommand extends QueryCommand
             ->addOption('dm', null, InputOption::VALUE_OPTIONAL, 'The document manager to use for this command.');
     }
 
-    /** @return int */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         DoctrineODMCommand::setApplicationDocumentManager($this->getApplication(), $input->getOption('dm'));
 

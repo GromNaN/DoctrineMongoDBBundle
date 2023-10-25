@@ -17,11 +17,12 @@ use function sprintf;
 
 /**
  * Show information about mapped documents
+ *
+ * @internal since 4.7
  */
 class InfoDoctrineODMCommand extends DoctrineODMCommand
 {
-    /** @return void */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('doctrine:mongodb:mapping:info')
@@ -40,8 +41,7 @@ EOT
         );
     }
 
-    /** @return int */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $documentManagerName = $input->hasOption('dm') ? $input->getOption('dm') : $this->getManagerRegistry()->getDefaultManagerName();
 

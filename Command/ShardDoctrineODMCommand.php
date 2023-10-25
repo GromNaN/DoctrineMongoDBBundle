@@ -12,11 +12,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Command to shard database collections for a set of classes based on their
  * mappings.
+ *
+ * @internal since 4.7
  */
 class ShardDoctrineODMCommand extends ShardCommand
 {
-    /** @return void */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -35,8 +36,7 @@ EOT
         );
     }
 
-    /** @return int */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         DoctrineODMCommand::setApplicationDocumentManager($this->getApplication(), $input->getOption('dm'));
 

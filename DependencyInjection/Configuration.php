@@ -24,10 +24,8 @@ class Configuration implements ConfigurationInterface
 {
     /**
      * Generates the configuration tree builder.
-     *
-     * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('doctrine_mongodb');
         $rootNode    = $treeBuilder->getRootNode();

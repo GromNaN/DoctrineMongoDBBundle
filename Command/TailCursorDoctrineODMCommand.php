@@ -30,8 +30,7 @@ class TailCursorDoctrineODMCommand extends Command implements ContainerAwareInte
     /** @var ContainerInterface|null */
     protected $container;
 
-    /** @return void */
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('doctrine:mongodb:tail-cursor')
@@ -43,8 +42,7 @@ class TailCursorDoctrineODMCommand extends Command implements ContainerAwareInte
             ->addOption('sleep-time', null, InputOption::VALUE_REQUIRED, 'The number of seconds to wait between two checks.', '10');
     }
 
-    /** @return int */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         trigger_deprecation(
             'doctrine/mongodb-odm-bundle',

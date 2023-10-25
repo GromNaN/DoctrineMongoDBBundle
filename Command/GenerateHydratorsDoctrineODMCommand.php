@@ -11,11 +11,12 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Generate the Doctrine ORM document hydrators to your cache directory.
+ *
+ * @internal since 4.7
  */
 class GenerateHydratorsDoctrineODMCommand extends GenerateHydratorsCommand
 {
-    /** @return void */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
 
@@ -34,8 +35,7 @@ EOT
         );
     }
 
-    /** @return int */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         DoctrineODMCommand::setApplicationDocumentManager($this->getApplication(), $input->getOption('dm'));
 
