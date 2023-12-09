@@ -7,7 +7,7 @@ namespace Doctrine\Bundle\MongoDBBundle\Tests\Validator\Constraints;
 use Doctrine\Bundle\MongoDBBundle\Validator\Constraints\Unique;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Validator\Mapping\ClassMetadata;
-use Symfony\Component\Validator\Mapping\Loader\AnnotationLoader;
+use Symfony\Component\Validator\Mapping\Loader\AttributeLoader;
 
 use function assert;
 
@@ -17,7 +17,7 @@ final class UniqueTest extends TestCase
     {
         $metadata = new ClassMetadata(UniqueDocumentDummyOne::class);
 
-        $loader = new AnnotationLoader();
+        $loader = new AttributeLoader();
 
         self::assertTrue($loader->loadClassMetadata($metadata));
 

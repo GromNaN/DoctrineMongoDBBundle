@@ -94,13 +94,9 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
         // set some options as parameters and unset them
         $config = $this->overrideParameters($config, $container);
 
-        if (class_exists(DataFixturesLoader::class)) {
-            // Autowiring fixture loader
-            $container->registerForAutoconfiguration(ODMFixtureInterface::class)
-                ->addTag(FixturesCompilerPass::FIXTURE_TAG);
-        } else {
-            $container->removeDefinition('doctrine_mongodb.odm.symfony.fixtures.loader');
-        }
+        // Autowiring fixture loader
+        $container->registerForAutoconfiguration(ODMFixtureInterface::class)
+            ->addTag(FixturesCompilerPass::FIXTURE_TAG);
 
         // load the connections
         $this->loadConnections($config['connections'], $container);
