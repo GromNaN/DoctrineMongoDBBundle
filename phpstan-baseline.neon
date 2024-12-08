@@ -553,12 +553,6 @@ parameters:
 			path: tests/DependencyInjection/ConfigurationTest.php
 
 		-
-			message: '#^Instantiated class Composer\\Semver\\VersionParser not found\.$#'
-			identifier: class.notFound
-			count: 3
-			path: tests/DependencyInjection/DoctrineMongoDBExtensionTest.php
-
-		-
 			message: '#^Method Doctrine\\Bundle\\MongoDBBundle\\Tests\\DependencyInjection\\DoctrineMongoDBExtensionTest\:\:assertDICDefinitionMethodCall\(\) has parameter \$params with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
