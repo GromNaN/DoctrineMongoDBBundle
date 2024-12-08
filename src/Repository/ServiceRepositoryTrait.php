@@ -17,7 +17,7 @@ trait ServiceRepositoryTrait
     /**
      * @param ManagerRegistry $registry      The ManagerRegistry to use
      * @param string          $documentClass The class name of the entity this repository manages
-     * @psalm-param class-string<T> $documentClass
+     * @phpstan-param class-string<T> $documentClass
      */
     public function __construct(ManagerRegistry $registry, string $documentClass)
     {
