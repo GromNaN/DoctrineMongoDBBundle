@@ -33,9 +33,9 @@ final class ContainerRepositoryFactory implements RepositoryFactory
     }
 
     /**
-     * @psalm-param class-string<T> $documentName
+     * @phpstan-param class-string<T> $documentName
      *
-     * @psalm-return ObjectRepository<T>
+     * @phpstan-return ObjectRepository<T>
      *
      * @template T of object
      */
@@ -73,9 +73,9 @@ final class ContainerRepositoryFactory implements RepositoryFactory
     }
 
     /**
-     * @psalm-param ClassMetadata<T> $metadata
+     * @phpstan-param ClassMetadata<T> $metadata
      *
-     * @psalm-return ObjectRepository<T>
+     * @phpstan-return ObjectRepository<T>
      *
      * @template T of object
      */
@@ -83,17 +83,17 @@ final class ContainerRepositoryFactory implements RepositoryFactory
     {
         $repositoryHash = $metadata->getName() . spl_object_hash($documentManager);
         if (isset($this->managedRepositories[$repositoryHash])) {
-            /** @psalm-var ObjectRepository<T> */
+            /** @phpstan-var ObjectRepository<T> */
             return $this->managedRepositories[$repositoryHash];
         }
 
         if ($metadata->customRepositoryClassName) {
             $repositoryClassName = $metadata->customRepositoryClassName;
         } elseif ($metadata->isFile) {
-            /** @psalm-var class-string<GridFSRepository<T>> $repositoryClassName */
+            /** @phpstan-var class-string<GridFSRepository<T>> $repositoryClassName */
             $repositoryClassName = $documentManager->getConfiguration()->getDefaultGridFSRepositoryClassName();
         } else {
-            /** @psalm-var class-string<ObjectRepository<T>> $repositoryClassName */
+            /** @phpstan-var class-string<ObjectRepository<T>> $repositoryClassName */
             $repositoryClassName = $documentManager->getConfiguration()->getDefaultDocumentRepositoryClassName();
         }
 

@@ -28,8 +28,6 @@ use function sprintf;
  * since this information is necessary to build the proxies in the first place.
  *
  * @internal
- *
- * @psalm-suppress ContainerDependency
  */
 class ProxyCacheWarmer implements CacheWarmerInterface
 {
