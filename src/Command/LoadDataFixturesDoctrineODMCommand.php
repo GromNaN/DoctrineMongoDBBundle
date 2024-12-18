@@ -95,12 +95,6 @@ EOT
             {
                 $this->output->writeln(sprintf('  <comment>></comment> <info>%s</info>', $message));
             }
-
-            /** @deprecated to be removed when dropping support for doctrine/data-fixtures <1.8 */
-            public function __invoke(string $message): void
-            {
-                $this->log(0, $message);
-            }
         });
         $executor->execute($fixtures, $input->getOption('append'));
 
