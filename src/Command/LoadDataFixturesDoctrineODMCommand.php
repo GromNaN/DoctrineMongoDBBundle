@@ -9,7 +9,6 @@ use Doctrine\Bundle\MongoDBBundle\ManagerRegistry;
 use Doctrine\Common\DataFixtures\Executor\MongoDBExecutor;
 use Doctrine\Common\DataFixtures\Purger\MongoDBPurger;
 use Psr\Log\AbstractLogger;
-use Stringable;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -85,12 +84,14 @@ EOT
 
         $purger   = new MongoDBPurger($dm);
         $executor = new MongoDBExecutor($dm, $purger);
+
         $executor->setLogger(new class ($output) extends AbstractLogger {
-            public function __construct(private readonly OutputInterface $output)
+            public function __construct(private OutputInterface $output)
             {
             }
 
-            public function log(mixed $level, string|Stringable $message, array $context = []): void
+            /** {@inheritDoc} */
+            public function log($level, $message, array $context = []): void
             {
                 $this->output->writeln(sprintf('  <comment>></comment> <info>%s</info>', $message));
             }

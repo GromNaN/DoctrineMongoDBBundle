@@ -37,7 +37,6 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
 {
     abstract protected function loadFromFile(ContainerBuilder $container, string $file): void;
 
-    /** @psalm-suppress UndefinedClass this won't be necessary when removing metadata cache configuration */
     public function testDependencyInjectionConfigurationDefaults(): void
     {
         $container = $this->getContainer();
@@ -335,7 +334,6 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
         $this->assertEquals(ApcuAdapter::class, $definition->getClass());
     }
 
-    /** @psalm-suppress UndefinedClass this won't be necessary when removing metadata cache configuration */
     public function testDocumentManagerMemcachedMetadataCacheDriverConfiguration(): void
     {
         $container = $this->getContainer();
