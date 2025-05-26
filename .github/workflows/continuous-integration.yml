@@ -20,7 +20,7 @@ jobs:
     strategy:
       matrix:
         os:
-          - "ubuntu-20.04"
+          - "ubuntu-24.04"
         php-version:
           - "7.4"
           - "8.0"
@@ -38,7 +38,7 @@ jobs:
           - "highest"
         include:
           - dependencies: "lowest"
-            os: "ubuntu-20.04"
+            os: "ubuntu-24.04"
             php-version: "7.4"
             driver-version: "1.5.0"
             stability: "stable"
@@ -108,7 +108,7 @@ jobs:
 
   upload_coverage:
     name: "Upload coverage to Codecov"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-24.04"
     needs:
       - "phpunit"
 
