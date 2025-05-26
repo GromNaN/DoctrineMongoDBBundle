@@ -514,4 +514,546 @@ class ConfigurationTest extends TestCase
         $processedConfig = $processor->processConfiguration($configuration, [$config]);
         $this->assertFalse(array_key_exists('replicaSet', $processedConfig['connections']['conn1']['options']));
     }
+
+    protected function processConfiguration(array $config): array
+    {
+        $processor = new Processor();
+        $configuration = new Configuration();
+
+        return $processor->processConfiguration($configuration, [$this->getMinimalValidConfig($config)]);
+    }
+
+    protected function getMinimalValidConfig(array $config = []): array
+    {
+        $baseConfig = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [], // Placeholder for autoEncryption or other options
+                ],
+            ],
+            'document_managers' => [
+                'default' => [],
+            ],
+        ];
+
+        // Deep merge config into baseConfig
+        if (isset($config['connections']['default']['driver_options'])) {
+            $baseConfig['connections']['default']['driver_options'] = array_merge(
+                $baseConfig['connections']['default']['driver_options'],
+                $config['connections']['default']['driver_options']
+            );
+            unset($config['connections']['default']['driver_options']);
+        }
+
+        if (isset($config['connections']['default'])) {
+            $baseConfig['connections']['default'] = array_merge(
+                $baseConfig['connections']['default'],
+                $config['connections']['default']
+            );
+            unset($config['connections']['default']);
+        }
+        if (isset($config['connections'])) {
+            $baseConfig['connections'] = array_merge(
+                $baseConfig['connections'],
+                $config['connections']
+            );
+            unset($config['connections']);
+        }
+
+
+        return array_merge($baseConfig, $config);
+    }
+
+    private function assertProcessedConfigurationEquals(array $expected, array $config): void
+    {
+        $this->assertEquals($expected, $this->processConfiguration($config));
+    }
+
+    private function assertConfigurationIsInvalid(array $config, ?string $expectedMessage = null): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        if ($expectedMessage !== null) {
+            $this->expectExceptionMessageMatches($expectedMessage);
+        }
+        $this->processConfiguration($config);
+    }
+
+    public function testBasicValidAutoEncryptionConfig(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'encryption.__keyVault',
+                            'kmsProviders' => ['local' => ['key' => base64_encode(random_bytes(96))]],
+                            'bypassAutoEncryption' => false,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithKeyVaultClientService(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.collection',
+                            'keyVaultClient' => 'my_key_vault_client_service',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']], // "password" in base64
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionValidKeyVaultNamespace(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'mydb.mycollection',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionInvalidKeyVaultNamespace(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'invalid_namespace_format',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $this->assertConfigurationIsInvalid(
+            $config,
+            '/Invalid keyVaultNamespace format. It should be "database.collection"/'
+        );
+    }
+
+    public function testAutoEncryptionWithVariousKmsProviders(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => [
+                                'aws' => ['accessKeyId' => 'keyId', 'secretAccessKey' => 'secret'],
+                                'azure' => ['tenantId' => 'tenant', 'clientId' => 'client', 'clientSecret' => 'secret'],
+                                'gcp' => ['email' => 'name@example.com', 'privateKey' => 'key'],
+                                'kmip' => ['endpoint' => 'localhost:5696'],
+                                'local' => ['key' => 'cGFzc3dvcmQ='],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithEmptyKmsProviders(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => [],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithSchemaMap(): void
+    {
+        $schemaMap = [
+            'db.coll' => [
+                'bsonType' => 'object',
+                'properties' => [
+                    'encryptedField' => [
+                        'encrypt' => [
+                            'keyId' => '/dataKeyId',
+                            'bsonType' => 'string',
+                            'algorithm' => 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'schemaMap' => $schemaMap,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $expected['connections']['default']['driver_options']['autoEncryption']['schemaMap'] = $schemaMap;
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithEncryptedFieldsMap(): void
+    {
+        $encryptedFieldsMap = [
+            'db.coll' => [
+                'fields' => [
+                    [
+                        'path' => 'encryptedField',
+                        'keyId' => '/dataKeyId',
+                        'bsonType' => 'string',
+                    ],
+                ],
+            ],
+        ];
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'encryptedFieldsMap' => $encryptedFieldsMap,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $expected['connections']['default']['driver_options']['autoEncryption']['encryptedFieldsMap'] = $encryptedFieldsMap;
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithSchemaAndEncryptedFieldsMap(): void
+    {
+        $schemaMap = ['db.coll' => ['bsonType' => 'object', 'properties' => ['foo' => []]]];
+        $encryptedFieldsMap = ['db.coll' => ['fields' => [['path' => 'bar']]]];
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'schemaMap' => $schemaMap,
+                            'encryptedFieldsMap' => $encryptedFieldsMap,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $expected['connections']['default']['driver_options']['autoEncryption']['schemaMap'] = $schemaMap;
+        $expected['connections']['default']['driver_options']['autoEncryption']['encryptedFieldsMap'] = $encryptedFieldsMap;
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithEmptySchemaAndEncryptedFieldsMap(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'schemaMap' => [],
+                            'encryptedFieldsMap' => [],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $expected['connections']['default']['driver_options']['autoEncryption']['schemaMap'] = [];
+        $expected['connections']['default']['driver_options']['autoEncryption']['encryptedFieldsMap'] = [];
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    /** @dataProvider provideBooleanFlags */
+    public function testAutoEncryptionBooleanFlags(string $flagName, bool $value): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            $flagName => $value,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public static function provideBooleanFlags(): array
+    {
+        return [
+            ['bypassAutoEncryption', true],
+            ['bypassAutoEncryption', false],
+            ['bypassQueryAnalysis', true],
+            ['bypassQueryAnalysis', false],
+        ];
+    }
+
+    public function testAutoEncryptionExtraOptions(): void
+    {
+        $extraOptions = [
+            'mongocryptdSpawnPath' => '/opt/mongodb/mongocryptd',
+            'mongocryptdBypassSpawn' => true,
+            'cryptSharedLibPath' => '/usr/local/lib/mongo_crypt_shared.so',
+            'cryptSharedLibRequired' => true,
+        ];
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'extraOptions' => $extraOptions,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $expected['connections']['default']['driver_options']['autoEncryption']['extraOptions'] = $extraOptions;
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionInvalidTypeOfBypassAutoEncryption(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'bypassAutoEncryption' => 'not-a-boolean',
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $this->assertConfigurationIsInvalid(
+            $config,
+            '/Invalid type for path "doctrine_mongodb.connections.default.driver_options.autoEncryption.bypassAutoEncryption". Expected "bool", but got "string"./'
+        );
+    }
+
+    public function testAutoEncryptionInvalidTypeOfKeyVaultNamespace(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => ['not-a-string'],
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $this->assertConfigurationIsInvalid(
+            $config,
+            '/Invalid type for path "doctrine_mongodb.connections.default.driver_options.autoEncryption.keyVaultNamespace". Expected "scalar", but got "array"./'
+        );
+    }
+
+    public function testAutoEncryptionWithOtherDriverOptionContext(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'context' => 'my_context_service',
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'encryption.__keyVault',
+                            'kmsProviders' => ['local' => ['key' => base64_encode(random_bytes(96))]],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithFullTlsOptions(): void
+    {
+        $tlsOptions = [
+            'tlsCAFile' => '/path/to/ca.pem',
+            'tlsCertificateKeyFile' => '/path/to/client.pem',
+            'tlsCertificateKeyFilePassword' => 'password123',
+            'tlsAllowInvalidCertificates' => true,
+            'tlsAllowInvalidHostnames' => true,
+            'tlsDisableCertificateRevocationCheck' => true,
+            'tlsDisableOCSPEndpointCheck' => true,
+            'tlsInsecure' => true,
+        ];
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'tlsOptions' => $tlsOptions,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        // Ensure the structure is as expected, especially the nested tlsOptions
+        $expected['connections']['default']['driver_options']['autoEncryption']['tlsOptions'] = $tlsOptions;
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithPartialTlsOptions(): void
+    {
+        $tlsOptions = [
+            'tlsCAFile' => '/path/to/another_ca.pem',
+            'tlsAllowInvalidHostnames' => true,
+        ];
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'tlsOptions' => $tlsOptions,
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        $expected['connections']['default']['driver_options']['autoEncryption']['tlsOptions'] = $tlsOptions;
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithEmptyTlsOptions(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'tlsOptions' => [], // Empty map
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $expected = $this->getMinimalValidConfig($config);
+        // Expect an empty array for tlsOptions in the processed config
+        $expected['connections']['default']['driver_options']['autoEncryption']['tlsOptions'] = [];
+        $this->assertProcessedConfigurationEquals($expected, $config);
+    }
+
+    public function testAutoEncryptionWithoutTlsOptions(): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            // tlsOptions is not provided
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $processed = $this->processConfiguration($config);
+        // Assert that tlsOptions key is not even present in the autoEncryption array
+        $this->assertArrayNotHasKey('tlsOptions', $processed['connections']['default']['driver_options']['autoEncryption']);
+    }
+
+    /** @dataProvider provideInvalidTlsOptionTypes */
+    public function testAutoEncryptionWithInvalidTlsOptionType(string $optionName, $invalidValue, string $expectedMessagePart): void
+    {
+        $config = [
+            'connections' => [
+                'default' => [
+                    'driver_options' => [
+                        'autoEncryption' => [
+                            'keyVaultNamespace' => 'db.coll',
+                            'kmsProviders' => ['local' => ['key' => 'cGFzc3dvcmQ=']],
+                            'tlsOptions' => [
+                                $optionName => $invalidValue,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+        $this->assertConfigurationIsInvalid(
+            $config,
+            sprintf('/Invalid type for path "doctrine_mongodb.connections.default.driver_options.autoEncryption.tlsOptions.%s". Expected %s/', $optionName, $expectedMessagePart)
+        );
+    }
+
+    public static function provideInvalidTlsOptionTypes(): array
+    {
+        return [
+            'tlsCAFile_as_boolean' => ['tlsCAFile', true, '"scalar", but got "bool"'],
+            'tlsCertificateKeyFile_as_array' => ['tlsCertificateKeyFile', ['arr'], '"scalar", but got "array"'],
+            'tlsCertificateKeyFilePassword_as_int' => ['tlsCertificateKeyFilePassword', 123, '"scalar", but got "int"'],
+            'tlsAllowInvalidCertificates_as_string' => ['tlsAllowInvalidCertificates', 'not-a-boolean', '"bool", but got "string"'],
+            'tlsAllowInvalidHostnames_as_int' => ['tlsAllowInvalidHostnames', 0, '"bool", but got "int"'],
+            'tlsDisableCertificateRevocationCheck_as_array' => ['tlsDisableCertificateRevocationCheck', [], '"bool", but got "array"'],
+            'tlsDisableOCSPEndpointCheck_as_string' => ['tlsDisableOCSPEndpointCheck', 'true_string', '"bool", but got "string"'],
+            'tlsInsecure_as_scalar_string' => ['tlsInsecure', 'false_string', '"bool", but got "string"'],
+        ];
+    }
 }

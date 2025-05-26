@@ -627,9 +627,368 @@ Otherwise you will get a *auth failed* exception.
 Specifying a context service
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The MongoDB driver supports receiving a stream context to set SSL and logging
-options. This can be used to authenticate using SSL certificates. To do so,
-create a service that creates your logging context:
+The MongoDB driver supports receiving a stream context to set SSL and logging options. This can be used to authenticate using SSL certificates.
+
+Client-Side Field-Level Encryption (CSFLE)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The bundle supports configuring Client-Side Field-Level Encryption via the ``autoEncryption`` driver option.
+This allows specific fields in your documents to be automatically encrypted and decrypted by the MongoDB driver.
+
+To enable CSFLE, you need to configure at least the ``keyVaultNamespace`` and ``kmsProviders``.
+
+Here's an example of how to configure ``autoEncryption``:
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        doctrine_mongodb:
+            connections:
+                default:
+                    server: "mongodb://localhost:27017"
+                    driver_options:
+                        context: "app.mongodb.context_service" # Optional: for SSL context
+                        autoEncryption:
+                            keyVaultNamespace: "encryption.__keyVault" # Required: "database.collection" for key vault
+                            kmsProviders:
+                                # Configuration for Key Management System (KMS) providers.
+                                # At least one provider is required if autoEncryption is enabled.
+                                # See specific provider examples below.
+                                local: { key: "BASE64_ENCODED_96_BYTE_MASTER_KEY_STRING" }
+                            # Optional: Specify a separate MongoDB client for the key vault
+                            # keyVaultClient: "app.mongodb.key_vault_client_service"
+                            # Optional: Provide a schema map for explicit encryption rules
+                            # schemaMap:
+                            #    "mydatabase.mycollection":
+                            #        bsonType: "object"
+                            #        encryptMetadata:
+                            #            keyId: "/dataKeyId" # Reference to a data key _id in the key vault
+                            #        properties:
+                            #            sensitive_field:
+                            #                encrypt:
+                            #                    bsonType: "string"
+                            #                    algorithm: "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+                            # Optional: Provide a map of collections to their encrypted fields (alternative to schemaMap for some drivers)
+                            # encryptedFieldsMap:
+                            #    "mydatabase.mycollection":
+                            #        fields:
+                            #            - path: "sensitive_field"
+                            #              keyId: "/dataKeyId" # UUID or string
+                            #              bsonType: "string"
+                            # Optional: Configure extra options for mongocryptd
+                            # extraOptions:
+                            #    mongocryptdSpawnPath: "/usr/local/bin/mongocryptd"
+                            #    mongocryptdBypassSpawn: false
+                            #    # Path to the crypt_shared library if not in system path
+                            #    cryptSharedLibPath: "/opt/mongodb/crypt_shared/lib/mongo_crypt_shared.so"
+                            #    # If true, the driver will fail if crypt_shared cannot be loaded
+                            #    cryptSharedLibRequired: false
+                            # Optional: TLS options for the Key Vault client if keyVaultClient is not specified
+                            # tlsOptions:
+                            #    tlsCAFile: "/path/to/key-vault-ca.pem"
+                            #    tlsCertificateKeyFile: "/path/to/key-vault-client.pem"
+                            # Optional: Bypass automatic query analysis if you are doing explicit encryption only
+                            # bypassQueryAnalysis: false
+                            # Optional: Disable auto-encryption entirely (useful for specific client instances)
+                            # bypassAutoEncryption: false
+
+.. _csfle-kms-providers:
+
+KMS Providers (`kmsProviders`)
+******************************
+
+The ``kmsProviders`` option is a map where each key specifies a KMS provider type (e.g., ``aws``, ``local``) and the value is a map of options for that provider.
+
+***AWS KMS Provider***
+
+Uses AWS Key Management Service for master keys.
+
+- ``accessKeyId`` (string): Your AWS access key ID.
+- ``secretAccessKey`` (string): Your AWS secret access key.
+- ``sessionToken`` (string, optional): AWS session token, if using temporary credentials.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # YAML for AWS KMS
+        doctrine_mongodb:
+            connections:
+                default:
+                    driver_options:
+                        autoEncryption:
+                            kmsProviders:
+                                aws:
+                                    accessKeyId: "YOUR_AWS_ACCESS_KEY_ID"
+                                    secretAccessKey: "YOUR_AWS_SECRET_ACCESS_KEY"
+                                    # sessionToken: "YOUR_AWS_SESSION_TOKEN" # Optional
+
+    .. code-block:: xml
+
+        <!-- XML for AWS KMS -->
+        <doctrine:connection>
+            <doctrine:driver-options>
+                <doctrine:autoEncryption>
+                    <doctrine:kmsProviders>
+                        <doctrine:aws
+                            accessKeyId="YOUR_AWS_ACCESS_KEY_ID"
+                            secretAccessKey="YOUR_AWS_SECRET_ACCESS_KEY"
+                            /> <!-- sessionToken can also be an attribute -->
+                    </doctrine:kmsProviders>
+                </doctrine:autoEncryption>
+            </doctrine:driver-options>
+        </doctrine:connection>
+
+***Azure KMS Provider***
+
+Uses Azure Key Vault for master keys.
+
+- ``tenantId`` (string): Your Azure tenant ID.
+- ``clientId`` (string): Your Azure client ID.
+- ``clientSecret`` (string): Your Azure client secret.
+- ``keyVaultEndpoint`` (string): The endpoint for your Azure Key Vault (e.g., ``https://yourkeyvault.vault.azure.net/``).
+- ``identityPlatformEndpoint`` (string, optional): Azure identity platform endpoint.
+- ``keyName`` (string, optional): The name of the key in Azure Key Vault.
+- ``keyVersion`` (string, optional): The version of the key in Azure Key Vault.
+
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # YAML for Azure KMS
+        doctrine_mongodb:
+            connections:
+                default:
+                    driver_options:
+                        autoEncryption:
+                            kmsProviders:
+                                azure:
+                                    tenantId: "YOUR_AZURE_TENANT_ID"
+                                    clientId: "YOUR_AZURE_CLIENT_ID"
+                                    clientSecret: "YOUR_AZURE_CLIENT_SECRET"
+                                    keyVaultEndpoint: "https://yourkeyvault.vault.azure.net/"
+                                    # identityPlatformEndpoint: "https://login.microsoftonline.com/" # Optional
+                                    # keyName: "your-key-name" # Optional
+                                    # keyVersion: "your-key-version" # Optional
+
+    .. code-block:: xml
+
+        <!-- XML for Azure KMS -->
+        <doctrine:connection>
+            <doctrine:driver-options>
+                <doctrine:autoEncryption>
+                    <doctrine:kmsProviders>
+                        <doctrine:azure
+                            tenantId="YOUR_AZURE_TENANT_ID"
+                            clientId="YOUR_AZURE_CLIENT_ID"
+                            clientSecret="YOUR_AZURE_CLIENT_SECRET"
+                            keyVaultEndpoint="https://yourkeyvault.vault.azure.net/"
+                            /> <!-- Other options as attributes -->
+                    </doctrine:kmsProviders>
+                </doctrine:autoEncryption>
+            </doctrine:driver-options>
+        </doctrine:connection>
+
+***GCP KMS Provider***
+
+Uses Google Cloud Key Management Service for master keys.
+
+- ``email`` (string): Your GCP service account email.
+- ``privateKey`` (string): Your GCP service account private key (PEM format).
+- ``projectId`` (string): Your GCP project ID.
+- ``location`` (string): The GCP location of the key ring (e.g., ``us-east1``).
+- ``keyRing`` (string): The name of the key ring.
+- ``keyName`` (string): The name of the key.
+- ``endpoint`` (string, optional): The KMS endpoint (defaults to ``kms.googleapis.com``).
+- ``keyVersion`` (string, optional): The version of the key.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # YAML for GCP KMS
+        doctrine_mongodb:
+            connections:
+                default:
+                    driver_options:
+                        autoEncryption:
+                            kmsProviders:
+                                gcp:
+                                    email: "your-gcp-service-account-email"
+                                    privateKey: "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----"
+                                    projectId: "your-gcp-project-id"
+                                    location: "your-gcp-location" # e.g., us-east1
+                                    keyRing: "your-key-ring"
+                                    keyName: "your-key-name"
+                                    # endpoint: "kms.googleapis.com" # Optional
+                                    # keyVersion: "your-key-version" # Optional
+
+    .. code-block:: xml
+
+        <!-- XML for GCP KMS -->
+        <doctrine:connection>
+            <doctrine:driver-options>
+                <doctrine:autoEncryption>
+                    <doctrine:kmsProviders>
+                        <doctrine:gcp
+                            email="your-gcp-service-account-email"
+                            privateKey="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----"
+                            projectId="your-gcp-project-id"
+                            location="your-gcp-location"
+                            keyRing="your-key-ring"
+                            keyName="your-key-name"
+                            /> <!-- Other options as attributes -->
+                    </doctrine:kmsProviders>
+                </doctrine:autoEncryption>
+            </doctrine:driver-options>
+        </doctrine:connection>
+
+***KMIP KMS Provider***
+
+Uses a KMIP-compliant server for master keys.
+
+- ``endpoint`` (string): The KMIP server endpoint (e.g., ``kmip.example.com:5696``).
+- ``tlsCAFile`` (string, optional): Path to the KMIP server's CA certificate file.
+- ``tlsClientCertificateKeyFile`` (string, optional): Path to the client's certificate and private key file (PEM format) for KMIP server authentication.
+- ``tlsClientCertificateKeyFilePassword`` (string, optional): Password for the client's private key if encrypted.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # YAML for KMIP KMS
+        doctrine_mongodb:
+            connections:
+                default:
+                    driver_options:
+                        autoEncryption:
+                            kmsProviders:
+                                kmip:
+                                    endpoint: "kmip.example.com:5696"
+                                    # tlsCAFile: "/path/to/kmip_ca.pem" # Optional
+                                    # tlsClientCertificateKeyFile: "/path/to/kmip_client.pem" # Optional
+                                    # tlsClientCertificateKeyFilePassword: "password" # Optional
+
+    .. code-block:: xml
+
+        <!-- XML for KMIP KMS -->
+        <doctrine:connection>
+            <doctrine:driver-options>
+                <doctrine:autoEncryption>
+                    <doctrine:kmsProviders>
+                        <doctrine:kmip endpoint="kmip.example.com:5696"/>
+                        <!-- For KMIP, TLS options like tlsCAFile can be added as attributes if they are simple strings.
+                             The XSD for kmsProviders (map-like-options) allows arbitrary attributes. -->
+                    </doctrine:kmsProviders>
+                </doctrine:autoEncryption>
+            </doctrine:driver-options>
+        </doctrine:connection>
+
+***Local KMS Provider (Testing Only)***
+
+Uses a local key for master keys. **WARNING: Intended for testing purposes only.**
+
+- ``key`` (string): A 96-byte master key, either as a base64 encoded string or a path to a file containing the key.
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # YAML for Local KMS
+        doctrine_mongodb:
+            connections:
+                default:
+                    driver_options:
+                        autoEncryption:
+                            kmsProviders:
+                                local:
+                                    # key: "/path/to/your/96byte_master_key.txt" # Path to key file
+                                    key: "BASE64_ENCODED_96_BYTE_MASTER_KEY_STRING" # Or base64 string
+
+    .. code-block:: xml
+
+        <!-- XML for Local KMS -->
+        <doctrine:connection>
+            <doctrine:driver-options>
+                <doctrine:autoEncryption>
+                    <doctrine:kmsProviders>
+                        <doctrine:local key="BASE64_ENCODED_96_BYTE_MASTER_KEY_STRING"/>
+                    </doctrine:kmsProviders>
+                </doctrine:autoEncryption>
+            </doctrine:driver-options>
+        </doctrine:connection>
+
+.. _csfle-tls-options:
+
+TLS Options for Key Vault Connection (`tlsOptions`)
+***************************************************
+
+If you are not specifying a custom ``keyVaultClient`` service, the MongoDB driver will create an internal MongoDB client to connect to your Key Vault. The ``tlsOptions`` allow you to configure TLS settings for this internal client connection.
+
+Available options under ``autoEncryption.tlsOptions``:
+
+- ``tlsCAFile`` (string): Path to a PEM file containing one or more certificate authority certificates.
+- ``tlsCertificateKeyFile`` (string): Path to a PEM file containing the client certificate and private key.
+- ``tlsCertificateKeyFilePassword`` (string): Password for an encrypted ``tlsCertificateKeyFile``.
+- ``tlsAllowInvalidCertificates`` (boolean): If true, the driver will not require a TLS certificate from the server to be valid. Defaults to ``false``. **Use with caution.**
+- ``tlsAllowInvalidHostnames`` (boolean): If true, the driver will not require the hostname of the server to match the hostname in the server's TLS certificate. Defaults to ``false``. **Use with caution.**
+- ``tlsDisableCertificateRevocationCheck`` (boolean): If true, the driver will not check the server's TLS certificate against a Certificate Revocation List (CRL). Defaults to ``false``.
+- ``tlsDisableOCSPEndpointCheck`` (boolean): If true, the driver will not check OCSP responder endpoints. Defaults to ``false``.
+- ``tlsInsecure`` (boolean): If true, allows connections to servers that have no TLS certificate or an invalid certificate. Defaults to ``false``. **Use with extreme caution.**
+
+.. configuration-block::
+
+    .. code-block:: yaml
+
+        # YAML for autoEncryption.tlsOptions
+        doctrine_mongodb:
+            connections:
+                default:
+                    driver_options:
+                        autoEncryption:
+                            keyVaultNamespace: "encryption.__keyVault"
+                            kmsProviders: { local: { key: "YOUR_BASE64_KEY" } }
+                            tlsOptions:
+                                tlsCAFile: "/path/to/key-vault-ca.pem"
+                                tlsCertificateKeyFile: "/path/to/key-vault-client.pem"
+                                tlsCertificateKeyFilePassword: "keyvaultclientpassword"
+                                tlsAllowInvalidCertificates: false
+                                tlsAllowInvalidHostnames: false
+                                # For other boolean flags, default is false. Set to true if needed.
+                                # tlsDisableCertificateRevocationCheck: false
+                                # tlsDisableOCSPEndpointCheck: false
+                                # tlsInsecure: false
+
+
+    .. code-block:: xml
+
+        <!-- XML for autoEncryption.tlsOptions -->
+        <doctrine:connection>
+            <doctrine:driver-options>
+                <doctrine:autoEncryption>
+                    <doctrine:keyVaultNamespace>encryption.__keyVault</doctrine:keyVaultNamespace>
+                    <doctrine:kmsProviders>
+                        <doctrine:local key="YOUR_BASE64_KEY"/>
+                    </doctrine:kmsProviders>
+                    <doctrine:tlsOptions
+                        tlsCAFile="/path/to/key-vault-ca.pem"
+                        tlsCertificateKeyFile="/path/to/key-vault-client.pem"
+                        tlsCertificateKeyFilePassword="keyvaultclientpassword"
+                        tlsAllowInvalidCertificates="false"
+                        tlsAllowInvalidHostnames="false"
+                        /> <!-- Other boolean flags default to false if omitted -->
+                </doctrine:autoEncryption>
+            </doctrine:driver-options>
+        </doctrine:connection>
+
+.. note::
+    - The ``key`` for the ``local`` KMS provider must be a 96-byte string, either as a path to a file containing it or as a base64 encoded string itself.
+    - If ``keyVaultClient`` is specified, it must be the service ID of a service returning a ``MongoDB\Driver\Manager`` instance configured for your key vault connection, and these ``tlsOptions`` will be ignored.
+    - For more details on CSFLE options, refer to the `MongoDB\Driver\ClientEncryption::__construct() documentation <https://www.php.net/manual/en/mongodb-driver-clientencryption.construct.php>`_ and the `MongoDB CSFLE guide <https://www.mongodb.com/docs/manual/core/csfle/>`_.
+
+To use the ``context`` service for SSL, create a service that creates your logging context:
 
 .. configuration-block::
 
@@ -781,6 +1140,32 @@ Full Default Configuration
                         wTimeoutMS:                             ~
                     driver_options:
                         context:              ~ # stream context to use for connection
+                        autoEncryption:       # Options for client-side field-level encryption
+                            bypassAutoEncryption:         false # Disables auto-encryption
+                            keyVaultClient:               null  # Service ID of a MongoDB\Driver\Manager for the key vault
+                            keyVaultNamespace:            null  # The namespace for the key vault collection (e.g., "encryption.__keyVault")
+                            kmsProviders:                 []    # Configuration for Key Management System providers (see specific examples above)
+                                # e.g., local: { key: "YOUR_BASE64_KEY" }
+                                # e.g., aws: { accessKeyId: "...", secretAccessKey: "..." }
+                            schemaMap:                    []    # Document schemas for explicit encryption
+                            encryptedFieldsMap:           []    # Map of collections to their encrypted fields configuration
+                            extraOptions:                 []    # Extra options for mongocryptd
+                                # mongocryptdURI: "mongodb://localhost:27020"
+                                # mongocryptdBypassSpawn: false
+                                # mongocryptdSpawnPath: "/usr/local/bin/mongocryptd"
+                                # mongocryptdSpawnArgs: ["--idleShutdownTimeoutSecs=60"]
+                                # cryptSharedLibPath: null  # Path to the crypt_shared library
+                                # cryptSharedLibRequired: false # If true, fails if the crypt_shared library cannot be loaded
+                            bypassQueryAnalysis:          false # Disables automatic analysis of read and write operations for encryption
+                            tlsOptions:                   # TLS options for the Key Vault client (if keyVaultClient is not specified)
+                                tlsCAFile:                              null  # Path to CA file, e.g., /path/to/key-vault-ca.pem
+                                tlsCertificateKeyFile:                  null  # Path to client cert/key file, e.g., /path/to/key-vault-client.pem
+                                tlsCertificateKeyFilePassword:          null  # Password for client cert/key file
+                                tlsAllowInvalidCertificates:            false # Bypass server certificate validation (use with caution)
+                                tlsAllowInvalidHostnames:               false # Bypass server hostname validation (use with caution)
+                                tlsDisableCertificateRevocationCheck:   false # Disable CRL checks
+                                tlsDisableOCSPEndpointCheck:            false # Disable OCSP checks
+                                tlsInsecure:                            false # Allow invalid/no server cert (use with extreme caution)
 
             proxy_namespace:      MongoDBODMProxies
             proxy_dir:            "%kernel.cache_dir%/doctrine/odm/mongodb/Proxies"
@@ -909,6 +1294,32 @@ Full Default Configuration
                 ->server('mongodb://localhost')
                 ->driverOptions([
                     'context' => null, // stream context to use for connection
+                    'autoEncryption' => [ // Options for client-side field-level encryption
+                        'bypassAutoEncryption' => false, // Disables auto-encryption
+                        'keyVaultClient' => null,  // Service ID of a MongoDB\Driver\Manager for the key vault
+                        'keyVaultNamespace' => null,  // The namespace for the key vault collection (e.g., "encryption.__keyVault")
+                        'kmsProviders' => [    // Configuration for Key Management System providers
+                                                 // e.g., 'local' => ['key' => 'YOUR_BASE64_KEY'],
+                                                 // e.g., 'aws' => ['accessKeyId' => '...', 'secretAccessKey' => '...'],
+                        ],
+                        'schemaMap' => [],    // Document schemas for explicit encryption
+                        'encryptedFieldsMap' => [], // Map of collections to their encrypted fields configuration
+                        'extraOptions' => [    // Extra options for mongocryptd
+                            // 'cryptSharedLibPath' => null,  // Path to the crypt_shared library
+                            // 'cryptSharedLibRequired' => false, // If true, fails if the crypt_shared library cannot be loaded
+                        ],
+                        'bypassQueryAnalysis' => false, // Disables automatic analysis of read and write operations for encryption
+                        'tlsOptions' => [        // TLS options for the Key Vault client (if keyVaultClient is not specified)
+                            // 'tlsCAFile' => null,  // Path to CA file, e.g., /path/to/key-vault-ca.pem
+                            // 'tlsCertificateKeyFile' => null,  // Path to client cert/key file, e.g., /path/to/key-vault-client.pem
+                            // 'tlsCertificateKeyFilePassword' => null,  // Password for client cert/key file
+                            // 'tlsAllowInvalidCertificates' => false, // Bypass server certificate validation (use with caution)
+                            // 'tlsAllowInvalidHostnames' => false, // Bypass server hostname validation (use with caution)
+                            // 'tlsDisableCertificateRevocationCheck' => false, // Disable CRL checks
+                            // 'tlsDisableOCSPEndpointCheck' => false, // Disable OCSP checks
+                            // 'tlsInsecure' => false, // Allow invalid/no server cert (use with extreme caution)
+                        ],
+                    ],
                 ])
                 ->options([
                     'authMechanism' => null,

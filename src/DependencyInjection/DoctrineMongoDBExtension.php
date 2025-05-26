@@ -480,6 +480,10 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
             $driverOptions['context'] = new Reference($driverOptions['context']);
         }
 
+        if (isset($driverOptions['autoEncryption']['keyVaultClient']) && is_string($driverOptions['autoEncryption']['keyVaultClient'])) {
+            $driverOptions['autoEncryption']['keyVaultClient'] = new Reference($driverOptions['autoEncryption']['keyVaultClient']);
+        }
+
         $driverOptions['driver'] = [
             'name' => 'symfony-mongodb',
             'version' => self::getODMVersion(),

@@ -84,7 +84,48 @@
   </xsd:complexType>
 
   <xsd:complexType name="connection-driver-options">
+    <xsd:all>
+      <xsd:element name="autoEncryption" type="auto-encryption" minOccurs="0"/>
+    </xsd:all>
     <xsd:attribute name="context" type="xsd:string" />
+  </xsd:complexType>
+
+  <xsd:complexType name="auto-encryption">
+    <xsd:all>
+      <xsd:element name="bypassAutoEncryption" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="keyVaultClient" type="xsd:string" minOccurs="0" />
+      <xsd:element name="keyVaultNamespace" type="xsd:string" minOccurs="0" />
+      <xsd:element name="kmsProviders" type="map-like-options" minOccurs="0" />
+      <xsd:element name="schemaMap" type="map-like-options" minOccurs="0" />
+      <xsd:element name="encryptedFieldsMap" type="map-like-options" minOccurs="0" />
+      <xsd:element name="extraOptions" type="map-like-options" minOccurs="0" />
+      <xsd:element name="bypassQueryAnalysis" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="tlsOptions" type="tls-options" minOccurs="0">
+        <xsd:annotation>
+          <xsd:documentation><![CDATA[TLS options for the Key Vault client if keyVaultClient is not specified.]]></xsd:documentation>
+        </xsd:annotation>
+      </xsd:element>
+    </xsd:all>
+  </xsd:complexType>
+
+  <xsd:complexType name="tls-options">
+    <xsd:all>
+      <xsd:element name="tlsCAFile" type="xsd:string" minOccurs="0" />
+      <xsd:element name="tlsCertificateKeyFile" type="xsd:string" minOccurs="0" />
+      <xsd:element name="tlsCertificateKeyFilePassword" type="xsd:string" minOccurs="0" />
+      <xsd:element name="tlsAllowInvalidCertificates" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="tlsAllowInvalidHostnames" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="tlsDisableCertificateRevocationCheck" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="tlsDisableOCSPEndpointCheck" type="xsd:boolean" minOccurs="0" />
+      <xsd:element name="tlsInsecure" type="xsd:boolean" minOccurs="0" />
+    </xsd:all>
+  </xsd:complexType>
+
+  <xsd:complexType name="map-like-options">
+    <xsd:sequence>
+      <xsd:any namespace="##any" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xsd:sequence>
+    <xsd:anyAttribute namespace="##any" processContents="lax"/>
   </xsd:complexType>
 
   <xsd:simpleType name="auth-mechanism">
