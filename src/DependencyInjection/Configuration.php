@@ -29,7 +29,7 @@ class Configuration implements ConfigurationInterface
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('doctrine_mongodb');
-        $rootNode    = $treeBuilder->getRootNode();
+        $rootNode = $treeBuilder->getRootNode();
 
         $this->addDocumentManagersSection($rootNode);
         $this->addConnectionsSection($rootNode);

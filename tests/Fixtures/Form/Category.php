@@ -28,7 +28,7 @@ class Category
 
     public function __construct(string $name)
     {
-        $this->name      = $name;
+        $this->name = $name;
         $this->documents = new ArrayCollection();
     }
 

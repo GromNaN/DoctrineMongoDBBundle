@@ -30,8 +30,8 @@ class Document
 
     public function __construct(ObjectId $id, string $name)
     {
-        $this->id         = $id;
-        $this->name       = $name;
+        $this->id = $id;
+        $this->name = $name;
         $this->categories = new ArrayCollection();
     }
 

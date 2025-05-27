@@ -14,10 +14,10 @@ final class InfoDoctrineODMCommandTest extends KernelTestCase
 {
     public function testExecute(): void
     {
-        $kernel      = new CommandTestKernel('test', false);
+        $kernel = new CommandTestKernel('test', false);
         $application = new Application($kernel);
 
-        $command       = $application->find('doctrine:mongodb:mapping:info');
+        $command = $application->find('doctrine:mongodb:mapping:info');
         $commandTester = new CommandTester($command);
         $commandTester->execute(['--dm' => 'command_test']);
 
@@ -28,10 +28,10 @@ final class InfoDoctrineODMCommandTest extends KernelTestCase
 
     public function testExecuteWithDocumentManagerWithoutDocuments(): void
     {
-        $kernel      = new CommandTestKernel('test', false);
+        $kernel = new CommandTestKernel('test', false);
         $application = new Application($kernel);
 
-        $command       = $application->find('doctrine:mongodb:mapping:info');
+        $command = $application->find('doctrine:mongodb:mapping:info');
         $commandTester = new CommandTester($command);
 
         $this->expectException(Throwable::class);

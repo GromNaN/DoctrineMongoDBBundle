@@ -32,7 +32,7 @@ final class SymfonyFixturesLoader extends Loader implements SymfonyFixturesLoade
         // Because parent::addFixture may call $this->createFixture
         // we cannot call $this->addFixture in this loop
         foreach ($fixtures as $fixture) {
-            $class                        = get_class($fixture['fixture']);
+            $class = get_class($fixture['fixture']);
             $this->loadedFixtures[$class] = $fixture['fixture'];
             $this->addGroupsFixtureMapping($class, $fixture['groups']);
         }
@@ -46,7 +46,7 @@ final class SymfonyFixturesLoader extends Loader implements SymfonyFixturesLoade
 
     public function addFixture(FixtureInterface $fixture): void
     {
-        $class                        = $fixture::class;
+        $class = $fixture::class;
         $this->loadedFixtures[$class] = $fixture;
 
         $reflection = new ReflectionClass($fixture);

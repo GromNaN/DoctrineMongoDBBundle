@@ -26,10 +26,10 @@ class ManagerRegistryTest extends TestCase
 
         /** @var class-string<Container> $containerClass */
         $containerClass = 'MongoDBManagerRepositoryTestResetContainer';
-        $dumper         = new PhpDumper($container);
+        $dumper = new PhpDumper($container);
         eval('?' . '>' . $dumper->dump(['class' => $containerClass]));
 
-        $container  = new $containerClass();
+        $container = new $containerClass();
         $repository = new ManagerRegistry('MongoDB', [], [
             'default' => 'manager.default',
             'lazy' => 'manager.lazy',

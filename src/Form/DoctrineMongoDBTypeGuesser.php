@@ -49,7 +49,7 @@ class DoctrineMongoDBTypeGuesser implements FormTypeGuesserInterface
 
         if ($metadata->hasAssociation($property)) {
             $multiple = $metadata->isCollectionValuedAssociation($property);
-            $mapping  = $metadata->getFieldMapping($property);
+            $mapping = $metadata->getFieldMapping($property);
 
             return new TypeGuess(
                 DocumentType::class,

@@ -74,7 +74,7 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
 
         $configuration = new Configuration();
-        $config        = $this->processConfiguration($configuration, $configs);
+        $config = $this->processConfiguration($configuration, $configs);
 
         $loader->load('mongodb.php');
         $loader->load('cache_warmer.php');
@@ -252,7 +252,7 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
      */
     protected function loadDocumentManager(array $documentManager, string|null $defaultDM, string $defaultDB, ContainerBuilder $container, bool $useLazyGhostObject = false): void
     {
-        $connectionName  = $documentManager['connection'] ?? $documentManager['name'];
+        $connectionName = $documentManager['connection'] ?? $documentManager['name'];
         $configurationId = sprintf('doctrine_mongodb.odm.%s_configuration', $documentManager['name']);
         $defaultDatabase = $documentManager['database'] ?? $defaultDB;
 
@@ -351,7 +351,7 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
             // Document managers will share their connection's event manager
             new Reference(sprintf('doctrine_mongodb.odm.%s_connection.event_manager', $connectionName)),
         ];
-        $odmDmDef  = new Definition(DocumentManager::class, $odmDmArgs);
+        $odmDmDef = new Definition(DocumentManager::class, $odmDmArgs);
         $odmDmDef->setFactory([DocumentManager::class, 'create']);
         $odmDmDef->addTag('doctrine_mongodb.odm.document_manager');
         $odmDmDef->setPublic(true);
@@ -469,7 +469,7 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
      */
     private function normalizeDriverOptions(array $connection): array
     {
-        $driverOptions            = $connection['driver_options'] ?? [];
+        $driverOptions = $connection['driver_options'] ?? [];
         $driverOptions['typeMap'] = DocumentManager::CLIENT_TYPEMAP;
 
         if (isset($driverOptions['context'])) {
@@ -520,7 +520,7 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
     protected function loadDocumentManagerBundlesMappingInformation(array $documentManager, Definition $odmConfigDef, ContainerBuilder $container): void
     {
         // reset state of drivers and alias map. They are only used by this methods and children.
-        $this->drivers  = [];
+        $this->drivers = [];
         $this->aliasMap = [];
 
         $this->loadMappingInformation($documentManager, $container);
@@ -615,11 +615,11 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
                 return $cacheDriverServiceId;
 
             case 'memcached':
-                $memcachedClass         = $cacheDriver['class'] ?? MemcachedAdapter::class;
+                $memcachedClass = $cacheDriver['class'] ?? MemcachedAdapter::class;
                 $memcachedInstanceClass = $cacheDriver['instance_class'] ?? 'Memcached';
-                $memcachedHost          = $cacheDriver['host'] ?? 'localhost';
-                $memcachedPort          = $cacheDriver['port'] ?? '11211';
-                $memcachedInstance      = new Definition($memcachedInstanceClass);
+                $memcachedHost = $cacheDriver['host'] ?? 'localhost';
+                $memcachedPort = $cacheDriver['port'] ?? '11211';
+                $memcachedInstance = new Definition($memcachedInstanceClass);
                 $memcachedInstance->addMethodCall('addServer', [
                     $memcachedHost,
                     $memcachedPort,
@@ -631,11 +631,11 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
                 break;
 
             case 'redis':
-                $redisClass         = $cacheDriver['class'] ?? RedisAdapter::class;
+                $redisClass = $cacheDriver['class'] ?? RedisAdapter::class;
                 $redisInstanceClass = $cacheDriver['instance_class'] ?? 'Redis';
-                $redisHost          = $cacheDriver['host'] ?? 'localhost';
-                $redisPort          = $cacheDriver['port'] ?? '6379';
-                $redisInstance      = new Definition($redisInstanceClass);
+                $redisHost = $cacheDriver['host'] ?? 'localhost';
+                $redisPort = $cacheDriver['port'] ?? '6379';
+                $redisInstance = new Definition($redisInstanceClass);
                 $redisInstance->addMethodCall('connect', [
                     $redisHost,
                     $redisPort,

@@ -20,7 +20,7 @@ class User implements UserInterface
 
     public function __construct(ObjectId $id, string $name)
     {
-        $this->id   = $id;
+        $this->id = $id;
         $this->name = $name;
     }
 

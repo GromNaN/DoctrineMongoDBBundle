@@ -30,9 +30,9 @@ class ConfigurationTest extends TestCase
 
     public function testDefaults(): void
     {
-        $processor     = new Processor();
+        $processor = new Processor();
         $configuration = new Configuration();
-        $options       = $processor->processConfiguration($configuration, []);
+        $options = $processor->processConfiguration($configuration, []);
 
         $defaults = [
             'auto_generate_hydrator_classes' => false,
@@ -63,9 +63,9 @@ class ConfigurationTest extends TestCase
     /** @dataProvider provideFullConfiguration */
     public function testFullConfiguration(array $config): void
     {
-        $processor     = new Processor();
+        $processor = new Processor();
         $configuration = new Configuration();
-        $options       = $processor->processConfiguration($configuration, [$config]);
+        $options = $processor->processConfiguration($configuration, [$config]);
 
         $expected = [
             'auto_generate_hydrator_classes' => 1,
@@ -236,9 +236,9 @@ class ConfigurationTest extends TestCase
      */
     public function testMergeOptions(array $configs, array $expected): void
     {
-        $processor     = new Processor();
+        $processor = new Processor();
         $configuration = new Configuration();
-        $options       = $processor->processConfiguration($configuration, $configs);
+        $options = $processor->processConfiguration($configuration, $configs);
 
         foreach ($expected as $key => $value) {
             $this->assertEquals($value, $options[$key]);
@@ -358,9 +358,9 @@ class ConfigurationTest extends TestCase
      */
     public function testNormalizeOptions(array $config, array $expected): void
     {
-        $processor     = new Processor();
+        $processor = new Processor();
         $configuration = new Configuration();
-        $options       = $processor->processConfiguration($configuration, [$config]);
+        $options = $processor->processConfiguration($configuration, [$config]);
 
         foreach ($expected as $key => $value) {
             $this->assertEquals($value, $options[$key]);
@@ -469,9 +469,9 @@ class ConfigurationTest extends TestCase
             ],
         ];
 
-        $processor     = new Processor();
+        $processor = new Processor();
         $configuration = new Configuration();
-        $options       = $processor->processConfiguration($configuration, [$config]);
+        $options = $processor->processConfiguration($configuration, [$config]);
 
         $this->assertEquals(['password' => 'bar'], $options['connections']['conn1']['options']);
         $this->assertEquals(['username' => 'foo'], $options['connections']['conn2']['options']);
@@ -489,7 +489,7 @@ class ConfigurationTest extends TestCase
             ],
         ];
 
-        $processor     = new Processor();
+        $processor = new Processor();
         $configuration = new Configuration();
 
         $this->expectException(InvalidConfigurationException::class);
@@ -509,8 +509,8 @@ class ConfigurationTest extends TestCase
             ],
         ];
 
-        $processor       = new Processor();
-        $configuration   = new Configuration();
+        $processor = new Processor();
+        $configuration = new Configuration();
         $processedConfig = $processor->processConfiguration($configuration, [$config]);
         $this->assertFalse(array_key_exists('replicaSet', $processedConfig['connections']['conn1']['options']));
     }

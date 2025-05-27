@@ -26,8 +26,8 @@ class ContainerRepositoryFactoryTest extends TestCase
 {
     public function testGetRepositoryReturnsService(): void
     {
-        $dm        = $this->createDocumentManager([CoolDocument::class => 'my_repo']);
-        $repo      = new StubRepository($dm, $dm->getUnitOfWork(), new ClassMetadata(CoolDocument::class));
+        $dm = $this->createDocumentManager([CoolDocument::class => 'my_repo']);
+        $repo = new StubRepository($dm, $dm->getUnitOfWork(), new ClassMetadata(CoolDocument::class));
         $container = $this->createContainer(['my_repo' => $repo]);
 
         $factory = new ContainerRepositoryFactory($container);
@@ -37,9 +37,9 @@ class ContainerRepositoryFactoryTest extends TestCase
     public function testGetRepositoryReturnsDocumentRepository(): void
     {
         $container = $this->createContainer([]);
-        $dm        = $this->createDocumentManager([BoringDocument::class => null]);
+        $dm = $this->createDocumentManager([BoringDocument::class => null]);
 
-        $factory    = new ContainerRepositoryFactory($container);
+        $factory = new ContainerRepositoryFactory($container);
         $actualRepo = $factory->getRepository($dm, BoringDocument::class);
         $this->assertInstanceOf(DocumentRepository::class, $actualRepo);
         // test the same instance is returned
@@ -49,11 +49,11 @@ class ContainerRepositoryFactoryTest extends TestCase
     public function testCustomRepositoryIsReturned(): void
     {
         $container = $this->createContainer([]);
-        $dm        = $this->createDocumentManager([
+        $dm = $this->createDocumentManager([
             CustomNormalRepoDocument::class => StubRepository::class,
         ]);
 
-        $factory    = new ContainerRepositoryFactory($container);
+        $factory = new ContainerRepositoryFactory($container);
         $actualRepo = $factory->getRepository($dm, CustomNormalRepoDocument::class);
         $this->assertInstanceOf(StubRepository::class, $actualRepo);
         // test the same instance is returned
@@ -133,7 +133,7 @@ class ContainerRepositoryFactoryTest extends TestCase
     {
         $classMetadatas = [];
         foreach ($documentRepositoryClasses as $documentClass => $documentRepositoryClass) {
-            $metadata                            = new ClassMetadata($documentClass);
+            $metadata = new ClassMetadata($documentClass);
             $metadata->customRepositoryClassName = $documentRepositoryClass;
 
             $classMetadatas[$documentClass] = $metadata;

@@ -30,7 +30,7 @@ class DocumentTypeTest extends TypeTestCase
 
     protected function setUp(): void
     {
-        $this->dm         = TestCase::createTestDocumentManager([
+        $this->dm = TestCase::createTestDocumentManager([
             __DIR__ . '/../../Fixtures/Form/Document',
         ]);
         $this->dmRegistry = $this->createRegistryMock('default', $this->dm);
@@ -88,7 +88,7 @@ class DocumentTypeTest extends TypeTestCase
         $categoryTwo = new Category('two');
         $this->dm->persist($categoryTwo);
 
-        $document               = new Document(new ObjectId(), 'document');
+        $document = new Document(new ObjectId(), 'document');
         $document->categories[] = $categoryOne;
         $this->dm->persist($document);
 
@@ -106,7 +106,7 @@ class DocumentTypeTest extends TypeTestCase
                 ],
             );
 
-        $view         = $form->createView();
+        $view = $form->createView();
         $categoryView = $view['categories'];
         $this->assertInstanceOf(FormView::class, $categoryView);
 

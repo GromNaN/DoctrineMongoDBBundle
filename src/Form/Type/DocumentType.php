@@ -33,7 +33,7 @@ class DocumentType extends DoctrineType
 
         $resolver->setDefaults(['document_manager' => null]);
 
-        $registry   = $this->registry;
+        $registry = $this->registry;
         $normalizer = static function (Options $options, $manager) use ($registry) {
             if (isset($options['document_manager']) && $manager) {
                 throw new InvalidArgumentException('You cannot set both an "em" and "document_manager" option.');

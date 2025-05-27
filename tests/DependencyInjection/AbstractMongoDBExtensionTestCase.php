@@ -40,7 +40,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testDependencyInjectionConfigurationDefaults(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
 
         $loader->load(DoctrineMongoDBExtensionTest::buildConfiguration(), $container);
 
@@ -82,7 +82,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testSingleDocumentManagerConfiguration(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
 
         $config = [
             'connections' => [
@@ -122,7 +122,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testLoadSimpleSingleConnection(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'mongodb_service_simple_single_connection');
@@ -140,7 +140,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
         $this->assertArrayHasKey('typeMap', $arguments[2]);
         $this->assertSame(['root' => 'array', 'document' => 'array'], $arguments[2]['typeMap']);
 
-        $definition  = $container->getDefinition('doctrine_mongodb.odm.default_configuration');
+        $definition = $container->getDefinition('doctrine_mongodb.odm.default_configuration');
         $methodCalls = $definition->getMethodCalls();
         $methodNames = array_map(static fn ($call) => $call[0], $methodCalls);
         $this->assertIsInt($pos = array_search('setDefaultDB', $methodNames));
@@ -164,7 +164,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testLoadSingleConnection(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'mongodb_service_single_connection');
@@ -200,7 +200,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testLoadMultipleConnections(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'mongodb_service_multiple_connections');
@@ -256,7 +256,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testBundleDocumentAliases(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
 
         $config = DoctrineMongoDBExtensionTest::buildConfiguration(
             ['document_managers' => ['default' => ['mappings' => ['XmlBundle' => []]]]],
@@ -264,7 +264,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
         $loader->load($config, $container);
 
         $definition = $container->getDefinition('doctrine_mongodb.odm.default_configuration');
-        $calls      = $definition->getMethodCalls();
+        $calls = $definition->getMethodCalls();
         $this->assertTrue(isset($calls[0][1][0]['XmlBundle']));
         $this->assertEquals('Doctrine\Bundle\MongoDBBundle\Tests\DependencyInjection\Fixtures\Bundles\XmlBundle\Document', $calls[0][1][0]['XmlBundle']);
     }
@@ -272,8 +272,8 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testXmlBundleMappingDetection(): void
     {
         $container = $this->getContainer('XmlBundle');
-        $loader    = new DoctrineMongoDBExtension();
-        $config    = DoctrineMongoDBExtensionTest::buildConfiguration(
+        $loader = new DoctrineMongoDBExtension();
+        $config = DoctrineMongoDBExtensionTest::buildConfiguration(
             ['document_managers' => ['default' => ['mappings' => ['XmlBundle' => []]]]],
         );
         $loader->load($config, $container);
@@ -286,8 +286,8 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testNewBundleStructureXmlBundleMappingDetection(): void
     {
         $container = $this->getContainer('NewXmlBundle');
-        $loader    = new DoctrineMongoDBExtension();
-        $config    = DoctrineMongoDBExtensionTest::buildConfiguration(
+        $loader = new DoctrineMongoDBExtension();
+        $config = DoctrineMongoDBExtensionTest::buildConfiguration(
             ['document_managers' => ['default' => ['mappings' => ['NewXmlBundle' => []]]]],
         );
         $loader->load($config, $container);
@@ -304,8 +304,8 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
         }
 
         $container = $this->getContainer('AttributesBundle');
-        $loader    = new DoctrineMongoDBExtension();
-        $config    = DoctrineMongoDBExtensionTest::buildConfiguration(
+        $loader = new DoctrineMongoDBExtension();
+        $config = DoctrineMongoDBExtensionTest::buildConfiguration(
             ['document_managers' => ['default' => ['mappings' => ['AttributesBundle' => 'attribute']]]],
         );
         $loader->load($config, $container);
@@ -318,7 +318,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testDocumentManagerMetadataCacheDriverConfiguration(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'mongodb_service_multiple_connections');
@@ -337,7 +337,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testDocumentManagerMemcachedMetadataCacheDriverConfiguration(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'mongodb_service_simple_single_connection');
@@ -364,7 +364,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testDependencyInjectionImportsOverrideDefaults(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
         $config = DoctrineMongoDBExtensionTest::buildConfiguration();
         $container->prependExtensionConfig($loader->getAlias(), reset($config));
@@ -381,7 +381,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testResolveTargetDocument(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'odm_resolve_target_document');
@@ -403,7 +403,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testFilters(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'odm_filters');
@@ -433,7 +433,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
     public function testCustomTypes(): void
     {
         $container = $this->getContainer();
-        $loader    = new DoctrineMongoDBExtension();
+        $loader = new DoctrineMongoDBExtension();
         $container->registerExtension($loader);
 
         $this->loadFromFile($container, 'odm_types');
@@ -459,8 +459,8 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
      */
     private function assertDefinitionMethodCallAny(Definition $definition, string $methodName, array $params): void
     {
-        $calls     = $definition->getMethodCalls();
-        $called    = false;
+        $calls = $definition->getMethodCalls();
+        $called = false;
         $lastError = null;
 
         foreach ($calls as $call) {
@@ -496,7 +496,7 @@ abstract class AbstractMongoDBExtensionTestCase extends TestCase
      */
     private function assertDefinitionMethodCallOnce(Definition $definition, string $methodName, array $params): void
     {
-        $calls  = $definition->getMethodCalls();
+        $calls = $definition->getMethodCalls();
         $called = false;
 
         foreach ($calls as $call) {

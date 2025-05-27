@@ -60,7 +60,7 @@ EOT
         $ui = new SymfonyStyle($input, $output);
 
         if ($input->isInteractive() && ! $input->getOption('append')) {
-            $helper   = $this->getHelper('question');
+            $helper = $this->getHelper('question');
             $question = new ConfirmationQuestion('Careful, database will be purged. Do you want to continue (y/N) ?', false);
 
             if (! $helper->ask($input, $output, $question)) {
@@ -68,7 +68,7 @@ EOT
             }
         }
 
-        $groups   = $input->getOption('group');
+        $groups = $input->getOption('group');
         $fixtures = $this->fixturesLoader->getFixtures($groups);
         if (! $fixtures) {
             $message = 'Could not find any fixture services to load';
@@ -82,7 +82,7 @@ EOT
             return 1;
         }
 
-        $purger   = new MongoDBPurger($dm);
+        $purger = new MongoDBPurger($dm);
         $executor = new MongoDBExecutor($dm, $purger);
 
         $executor->setLogger(new class ($output) extends AbstractLogger {

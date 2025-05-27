@@ -47,7 +47,7 @@ class ServiceRepositoryTest extends TestCase
             'kernel.project_dir' => __DIR__ . '/../../../../',
             'kernel.container_class' => Container::class,
         ]));
-        $extension       = new DoctrineMongoDBExtension();
+        $extension = new DoctrineMongoDBExtension();
         $this->container->registerExtension($extension);
 
         $extension->load([

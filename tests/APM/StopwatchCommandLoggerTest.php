@@ -20,7 +20,7 @@ class StopwatchCommandLoggerTest extends TestCase
     {
         $this->dm = TestCase::createTestDocumentManager();
 
-        $this->stopwatch     = new Stopwatch(true);
+        $this->stopwatch = new Stopwatch(true);
         $this->commandLogger = new StopwatchCommandLogger($this->stopwatch);
         $this->commandLogger->register();
 

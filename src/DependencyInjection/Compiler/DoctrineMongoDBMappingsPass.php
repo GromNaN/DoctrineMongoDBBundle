@@ -62,8 +62,8 @@ final class DoctrineMongoDBMappingsPass extends RegisterMappingsPass
     public static function createXmlMappingDriver(array $mappings, array $managerParameters, string|false $enabledParameter = false, array $aliasMap = []): DoctrineMongoDBMappingsPass
     {
         $arguments = [$mappings, '.mongodb.xml'];
-        $locator   = new Definition(SymfonyFileLocator::class, $arguments);
-        $driver    = new Definition(XmlDriver::class, [$locator]);
+        $locator = new Definition(SymfonyFileLocator::class, $arguments);
+        $driver = new Definition(XmlDriver::class, [$locator]);
 
         return new DoctrineMongoDBMappingsPass($driver, $mappings, $managerParameters, $enabledParameter, $aliasMap);
     }
@@ -82,8 +82,8 @@ final class DoctrineMongoDBMappingsPass extends RegisterMappingsPass
     public static function createPhpMappingDriver(array $mappings, array $managerParameters = [], string|false $enabledParameter = false, array $aliasMap = []): DoctrineMongoDBMappingsPass
     {
         $arguments = [$mappings, '.php'];
-        $locator   = new Definition(SymfonyFileLocator::class, $arguments);
-        $driver    = new Definition(PHPDriver::class, [$locator]);
+        $locator = new Definition(SymfonyFileLocator::class, $arguments);
+        $driver = new Definition(PHPDriver::class, [$locator]);
 
         return new DoctrineMongoDBMappingsPass($driver, $mappings, $managerParameters, $enabledParameter, $aliasMap);
     }

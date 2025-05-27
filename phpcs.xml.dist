@@ -29,6 +29,8 @@
 
         <!-- Allow short nullable syntax for non-union types -->
         <exclude name="SlevomatCodingStandard.TypeHints.UnionTypeHintFormat.DisallowedShortNullable" />
+
+        <exclude name="Generic.Formatting.MultipleStatementAlignment.NotSame" />
     </rule>
 
     <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">

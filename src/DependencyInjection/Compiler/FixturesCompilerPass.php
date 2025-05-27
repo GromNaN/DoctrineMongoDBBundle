@@ -19,7 +19,7 @@ final class FixturesCompilerPass implements CompilerPassInterface
             return;
         }
 
-        $definition     = $container->getDefinition('doctrine_mongodb.odm.symfony.fixtures.loader');
+        $definition = $container->getDefinition('doctrine_mongodb.odm.symfony.fixtures.loader');
         $taggedServices = $container->findTaggedServiceIds(self::FIXTURE_TAG);
 
         $fixtures = [];

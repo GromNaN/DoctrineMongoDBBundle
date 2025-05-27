@@ -27,7 +27,7 @@ class DocumentValueResolverFunctionalTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $dm   = static::getContainer()->get(DocumentManager::class);
+        $dm = static::getContainer()->get(DocumentManager::class);
         $user = new User('user-identifier');
 
         $dm->persist($user);
@@ -45,7 +45,7 @@ class DocumentValueResolverFunctionalTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $dm   = static::getContainer()->get(DocumentManager::class);
+        $dm = static::getContainer()->get(DocumentManager::class);
         $user = new User('user-identifier');
 
         $dm->persist($user);

@@ -63,12 +63,12 @@ class PersistentCollectionCacheWarmer implements CacheWarmerInterface
         }
 
         $generated = [];
-        $registry  = $this->container->get('doctrine_mongodb');
+        $registry = $this->container->get('doctrine_mongodb');
         assert($registry instanceof ManagerRegistry);
         foreach ($registry->getManagers() as $dm) {
             /** @var DocumentManager $dm */
             $collectionGenerator = $dm->getConfiguration()->getPersistentCollectionGenerator();
-            $classes             = $dm->getMetadataFactory()->getAllMetadata();
+            $classes = $dm->getMetadataFactory()->getAllMetadata();
             foreach ($classes as $metadata) {
                 foreach ($metadata->getAssociationNames() as $fieldName) {
                     $mapping = $metadata->getFieldMapping($fieldName);

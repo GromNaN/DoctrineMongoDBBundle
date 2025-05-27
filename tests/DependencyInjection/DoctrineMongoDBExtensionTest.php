@@ -141,7 +141,7 @@ class DoctrineMongoDBExtensionTest extends TestCase
     {
         $bundles = (array) $bundles;
 
-        $map         = [];
+        $map = [];
         $metadataMap = [];
         foreach ($bundles as $bundle) {
             $bundleDir = __DIR__ . '/Fixtures/Bundles/' . $bundle;

@@ -27,7 +27,7 @@ class TypeGuesserTest extends TypeTestCase
 
     protected function setUp(): void
     {
-        $this->dm         = TestCase::createTestDocumentManager([
+        $this->dm = TestCase::createTestDocumentManager([
             __DIR__ . '/../../Fixtures/Form/Guesser',
         ]);
         $this->dmRegistry = $this->createRegistryMock('default', $this->dm);

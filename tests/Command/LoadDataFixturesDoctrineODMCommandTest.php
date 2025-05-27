@@ -15,7 +15,7 @@ class LoadDataFixturesDoctrineODMCommandTest extends KernelTestCase
 
     protected function setUp(): void
     {
-        $kernel      = new CommandTestKernel('test', false);
+        $kernel = new CommandTestKernel('test', false);
         $application = new Application($kernel);
 
         $this->command = $application->find('doctrine:mongodb:fixtures:load');

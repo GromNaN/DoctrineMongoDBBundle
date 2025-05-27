@@ -41,7 +41,7 @@ final class ContainerRepositoryFactory implements RepositoryFactory
      */
     public function getRepository(DocumentManager $documentManager, string $documentName): ObjectRepository
     {
-        $metadata             = $documentManager->getClassMetadata($documentName);
+        $metadata = $documentManager->getClassMetadata($documentName);
         $customRepositoryName = $metadata->customRepositoryClassName;
 
         if ($customRepositoryName !== null) {
