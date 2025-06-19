@@ -5,7 +5,6 @@ on:
     branches:
       - "*.x"
       - "feature/*"
-  push:
 
 env:
   fail-fast: true
@@ -24,15 +23,10 @@ jobs:
           - "ubuntu-24.04"
         php-version:
           - "8.1"
-          - "8.2"
-          - "8.3"
-          - "8.4"
         stability:
           - "stable"
         symfony-version:
           - "6.4.*"
-          - "7.2.*"
-          - "7.3.*"
         driver-version:
           - "stable"
         dependencies:
@@ -44,17 +38,6 @@ jobs:
             driver-version: "1.21.0"
             stability: "stable"
             symfony-version: "6.4.*"
-          - dependencies: "highest"
-            os: "ubuntu-24.04"
-            php-version: "8.2"
-            driver-version: "mongodb/mongo-php-driver@v2.x"
-            stability: "dev"
-            symfony-version: "7.2.*"
-        exclude:
-          - php-version: "8.1"
-            symfony-version: "7.2.*"
-          - php-version: "8.1"
-            symfony-version: "7.3.*"
 
     services:
       mongodb:
