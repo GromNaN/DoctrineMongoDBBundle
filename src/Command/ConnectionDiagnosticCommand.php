@@ -17,7 +17,7 @@ use Symfony\Contracts\Service\ServiceProviderInterface;
 )]
 final class ConnectionDiagnosticCommand extends Command
 {
-    public function __construct(private ServiceProviderInterface $diagnostics)
+    public function __construct(private readonly ServiceProviderInterface $diagnostics)
     {
         parent::__construct();
     }
