@@ -7,7 +7,6 @@ namespace Doctrine\Bundle\MongoDBBundle\DependencyInjection;
 use Composer\InstalledVersions;
 use Doctrine\Bundle\MongoDBBundle\Attribute\AsDocumentListener;
 use Doctrine\Bundle\MongoDBBundle\Attribute\MapDocument;
-use Doctrine\Bundle\MongoDBBundle\DataCollector\ConnectionDiagnostic;
 use Doctrine\Bundle\MongoDBBundle\DependencyInjection\Compiler\FixturesCompilerPass;
 use Doctrine\Bundle\MongoDBBundle\DependencyInjection\Compiler\ServiceRepositoryCompilerPass;
 use Doctrine\Bundle\MongoDBBundle\Fixture\ODMFixtureInterface;
@@ -47,7 +46,6 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Throwable;
 
-use function array_diff_key;
 use function array_key_first;
 use function array_merge;
 use function class_exists;
@@ -120,7 +118,7 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
             ->setArgument(5, $config['enable_lazy_ghost_objects'] ? Proxy::class : LazyLoadingInterface::class);
 
         // load the connections
-        $this->loadConnections($config['connections'], $container, $config);
+        $this->loadConnections($config['connections'], $container);
 
         $config['document_managers'] = $this->fixManagersAutoMappings($config['document_managers'], $container->getParameter('kernel.bundles'));
 
@@ -181,22 +179,6 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
         $this->loadMessengerServices($container, $loader);
 
         $this->loadEntityValueResolverServices($container, $loader, $config);
-
-        // Register EncryptionDiagnostics for each connection
-        $diagnosticsRefs = [];
-        foreach ($config['connections'] as $connName => $connConfig) {
-            $connService   = sprintf('doctrine_mongodb.odm.%s_connection', $connName);
-            $driverOptions = $connConfig['driver_options'] ?? [];
-            $diagServiceId = sprintf('doctrine_mongodb.encryption_diagnostics.%s', $connName);
-            $container->setDefinition(
-                $diagServiceId,
-                new Definition(ConnectionDiagnostic::class, [
-                    new Reference($connService), // Use the connection service, which is a MongoDB\Client
-                    $driverOptions,
-                ]),
-            );
-            $diagnosticsRefs[$connName] = new Reference($diagServiceId);
-        }
     }
 
     /**
@@ -400,10 +382,9 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
      * @param array            $config    An array of connections configurations
      * @param ContainerBuilder $container A ContainerBuilder instance
      */
-    protected function loadConnections(array $connections, ContainerBuilder $container, array $config): void
+    protected function loadConnections(array $connections, ContainerBuilder $container): void
     {
-        $cons        = [];
-        $diagnostics = [];
+        $cons = [];
         foreach ($connections as $name => $connection) {
             // Define an event manager for this connection
             $eventManagerId = sprintf('doctrine_mongodb.odm.%s_connection.event_manager', $name);
@@ -418,12 +399,11 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
                 new Definition(ODMConfiguration::class),
             );
 
-            $driverOptions = $this->normalizeDriverOptions($connection, $config);
-            $odmConnArgs   = [
+            $odmConnArgs = [
                 $connection['server'] ?? null,
                 /* phpcs:ignore Squiz.Arrays.ArrayDeclaration.ValueNoNewline */
                 $connection['options'] ?? [],
-                $driverOptions,
+                $this->normalizeDriverOptions($connection),
             ];
 
             $odmConnDef = new Definition(Client::class, $odmConnArgs);
@@ -431,11 +411,6 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
             $id = sprintf('doctrine_mongodb.odm.%s_connection', $name);
             $container->setDefinition($id, $odmConnDef);
             $cons[$name] = $id;
-
-            // Diagnostic service
-            $container->register(sprintf('doctrine_mongodb.odm.%s_connection_diagnostic', $name), ConnectionDiagnostic::class)
-                ->setArguments([new Reference($id), $driverOptions])
-                ->addTag('doctrine_mongodb.connection_diagnostic', ['name' => $name]);
         }
 
         $container->setParameter('doctrine_mongodb.odm.connections', $cons);
@@ -488,35 +463,17 @@ class DoctrineMongoDBExtension extends AbstractDoctrineExtension
     /**
      * Normalizes the driver options array
      *
-     * @param array<string, mixed> $connection Connection configuration
-     * @param array<string, mixed> $config     Full configuration
+     * @param array<string, mixed> $connection
      *
      * @return array<string, mixed>
      */
-    private function normalizeDriverOptions(array $connection, array $config): array
+    private function normalizeDriverOptions(array $connection): array
     {
         $driverOptions            = $connection['driver_options'] ?? [];
         $driverOptions['typeMap'] = DocumentManager::CLIENT_TYPEMAP;
 
         if (isset($driverOptions['context'])) {
             $driverOptions['context'] = new Reference($driverOptions['context']);
-        }
-
-        if (isset($connection['autoEncryption'])) {
-            $kmsProvider                     = $connection['autoEncryption']['kmsProvider'];
-            $driverOptions['autoEncryption'] = array_diff_key($connection['autoEncryption'], [
-                'kmsProvider' => false,
-                'masterKey' => false,
-            ]);
-
-            $driverOptions['autoEncryption']['keyVaultNamespace'] ??= $config['default_database'] . '.datakeys';
-            if (isset($driverOptions['autoEncryption']['keyVaultClient'])) {
-                $driverOptions['autoEncryption']['keyVaultClient'] = new Reference($driverOptions['autoEncryption']['keyVaultClient']);
-            }
-
-            $driverOptions['autoEncryption']['kmsProviders'] = [
-                $kmsProvider['type'] => array_diff_key($kmsProvider, ['type' => true]),
-            ];
         }
 
         $driverOptions['driver'] = [
