@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\Bundle\MongoDBBundle\Command\ClearMetadataCacheDoctrineODMCommand;
 use Doctrine\Bundle\MongoDBBundle\Command\CreateSchemaDoctrineODMCommand;
+use Doctrine\Bundle\MongoDBBundle\Command\DebugFieldTypesDoctrineODMCommand;
 use Doctrine\Bundle\MongoDBBundle\Command\DropSchemaDoctrineODMCommand;
 use Doctrine\Bundle\MongoDBBundle\Command\Encryption\DiagnosticCommand;
 use Doctrine\Bundle\MongoDBBundle\Command\Encryption\DumpFieldsMapCommand;
@@ -46,6 +47,12 @@ return static function (ContainerConfigurator $containerConfigurator): void {
 
         ->set('doctrine_mongodb.odm.command.info', InfoDoctrineODMCommand::class)
             ->tag('console.command', ['command' => 'doctrine:mongodb:mapping:info'])
+            ->args([
+                service('doctrine_mongodb'),
+            ])
+
+        ->set('doctrine_mongodb.odm.command.debug_field_types', DebugFieldTypesDoctrineODMCommand::class)
+            ->tag('console.command', ['command' => 'doctrine:mongodb:debug-field-types'])
             ->args([
                 service('doctrine_mongodb'),
             ])

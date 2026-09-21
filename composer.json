@@ -36,7 +36,8 @@
         "symfony/doctrine-bridge": "^6.4 || ^7.0 || ^8.0",
         "symfony/framework-bundle": "^6.4 || ^7.0 || ^8.0",
         "symfony/http-kernel": "^6.4 || ^7.0 || ^8.0",
-        "symfony/options-resolver": "^6.4 || ^7.0 || ^8.0"
+        "symfony/options-resolver": "^6.4 || ^7.0 || ^8.0",
+        "symfony/polyfill-php84": "^1.30"
     },
     "require-dev": {
         "composer/semver": "^3.4",

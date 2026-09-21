@@ -10,6 +10,7 @@ use Doctrine\Bundle\MongoDBBundle\Attribute\MapDocument;
 use Doctrine\Bundle\MongoDBBundle\DataCollector\ConnectionDiagnostic;
 use Doctrine\Bundle\MongoDBBundle\DependencyInjection\Compiler\FixturesCompilerPass;
 use Doctrine\Bundle\MongoDBBundle\DependencyInjection\Compiler\ServiceRepositoryCompilerPass;
+use Doctrine\Bundle\MongoDBBundle\DependencyInjection\Compiler\TypeProviderPass;
 use Doctrine\Bundle\MongoDBBundle\Fixture\ODMFixtureInterface;
 use Doctrine\Bundle\MongoDBBundle\Mapping\Driver\XmlDriver;
 use Doctrine\Bundle\MongoDBBundle\Repository\ServiceDocumentRepositoryInterface;
@@ -46,6 +47,7 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Throwable;
 
+use function array_any;
 use function array_diff_key;
 use function array_flip;
 use function array_key_first;
@@ -435,9 +437,18 @@ class DoctrineMongoDBExtension extends Extension
 
         $container->setParameter('doctrine_mongodb.odm.default_document_manager', $config['default_document_manager']);
 
-        if (! empty($config['types'])) {
+        TypeProviderPass::registerAutoconfiguration($container);
+
+        $customTypes = $config['types'] ?? [];
+        $container->setParameter('doctrine_mongodb.odm.custom_types', $customTypes);
+        $hasServiceType = array_any($customTypes, static fn (array $type) => isset($type['service']));
+
+        if (! $hasServiceType && $customTypes !== []) {
+            // Class-based config types are not service-injected: load them into the shared
+            // registry through the manager configurator, as before. Service-backed types are
+            // built into scoped registries by TypeProviderPass.
             $configuratorDefinition = $container->getDefinition('doctrine_mongodb.odm.manager_configurator.abstract');
-            $configuratorDefinition->addMethodCall('loadTypes', [$config['types']]);
+            $configuratorDefinition->addMethodCall('loadTypes', [$customTypes]);
         }
 
         // Disable proxy class generation for PHP 8.4 native lazy objects
@@ -723,7 +734,8 @@ class DoctrineMongoDBExtension extends Extension
             // Document managers will share their connection's event manager
             new Reference(sprintf('doctrine_mongodb.odm.%s_connection.event_manager', $connectionName)),
         ];
-        $odmDmDef  = new Definition(DocumentManager::class, $odmDmArgs);
+
+        $odmDmDef = new Definition(DocumentManager::class, $odmDmArgs);
         $odmDmDef->setFactory([DocumentManager::class, 'create']);
         $odmDmDef->addTag('doctrine_mongodb.odm.document_manager');
         $odmDmDef->setPublic(true);
